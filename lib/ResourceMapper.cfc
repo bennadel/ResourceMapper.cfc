@@ -7,12 +7,20 @@ component
 
 
 	// I return an initialized object.
-	function init ( String defaultParamName = "event" ) {
+	function init ( 
+		String defaultParamName = "event",
+		Boolean matchEntireResource = true
+		) {
 
 		// Store the default param name - this is the name given to 
 		// the param that gets passed in as a string when resource
 		// routes are being defined.
 		variables.defaultParamName = defaultParamName;
+
+		// Check to see if we should be matching against the entire
+		// resource. If FALSE, this will allow a resource pattern to
+		// match a substring of a resource.
+		variables.matchEntireResource = matchEntireResource;
 
 		// Store the list of resource patterns that can be matched.
 		variables.resourceConfigurations = []; 
@@ -115,7 +123,6 @@ component
 				var resolution = {
 					httpMethod = httpMethod,
 					resourceUri = resourceUri,
-					matchedResource = resourceConfiguration.matcher.group( javaCast( "int", 0 ) ),
 					resourceParams = duplicate( resourceConfiguration.resourceParams )
 				};
 
@@ -245,6 +252,15 @@ component
 		// let's create our base pattern. We'll start by making sure
 		// the resource maps to the beginning of the string.
 		var resourcePattern = ("^" & resourceUri);
+
+		// Check to see if we are matching the entire resource.
+		if ( variables.matchEntireResource ) {
+
+			// By appending the end-of-string character, we will 
+			// prevent partial resource matching.
+			resourcePattern &= "$";
+
+		}
 
 		// Now, let's replace each group.
 		for ( var resourceParam in resourceParams ) {
