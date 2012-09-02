@@ -58,7 +58,7 @@
 
 
 	// Check to see if a resource has been defined.
-	if (len( url.resourceUri )){
+	if ( len( url.resourceUri ) ) {
 
 		resourceResolution = resourceMapper.resolveResource(
 			httpMethod = url.httpMethod,
