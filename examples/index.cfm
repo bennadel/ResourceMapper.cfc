@@ -1,6 +1,6 @@
 <cfscript>
 
-	
+
 	// Param the HTTP method to test with.
 	param
 		name = "url.httpMethod"

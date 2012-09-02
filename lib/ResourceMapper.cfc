@@ -288,7 +288,8 @@ component
 			groupCount = arrayLen( groupNames ),
 			pattern = createObject( "java", "java.util.regex.Pattern" ).compile(
 				javaCast( "string", resourcePattern )
-			)
+			),
+			rawDefinition = resourceUri
 		};
 
 		return( compiledResource );
