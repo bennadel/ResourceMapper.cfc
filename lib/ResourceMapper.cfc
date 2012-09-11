@@ -114,37 +114,46 @@ component
 			// Check the HTTP method first since it will fail faster.
 			// If the HTTP method matched, reset the pattern mathcer
 			// for the current resource.
-			if (
-				( resourceConfiguration.httpMethod == httpMethod ) &&
-				( resourceConfiguration.matcher.reset( javaCast( "string", resourceUri ) ).find() )
-				) {
+			if ( resourceConfiguration.httpMethod == httpMethod ) {
 
-				// The pattern matched! Create the base result.
-				var resolution = {
-					httpMethod = httpMethod,
-					resourceUri = resourceUri,
-					resourceParams = duplicate( resourceConfiguration.resourceParams )
-				};
+				// Create a matcher for the current resource Uri - 
+				// this can be used to both test the pattern as well
+				// as extract captured groups.
+				var matcher = resourceConfiguration.compiledResource.pattern.matcher(
+					javaCast( "string", resourceUri )
+				);
 
-				// Now, add on the resource params mapped in the 
-				// actual resource value. To make this easier, get 
-				// some short-hand reference to our compiled values.
-				var groupNames = resourceConfiguration.compiledResource.groupNames;
-				var groupCount = resourceConfiguration.compiledResource.groupCount;
+				// Now, check to see if the pattern matches.
+				if ( matcher.find() ) {
 
-				// For each captured group, define one resource param.
-				// Based on our pattern, we know that all captrued 
-				// groups will be defined.
-				for ( var groupIndex = 1 ; groupIndex <= groupCount ; groupIndex++ ) {
+					// The pattern matched! Create the base result.
+					var resolution = {
+						httpMethod = httpMethod,
+						resourceUri = resourceUri,
+						resourceParams = duplicate( resourceConfiguration.resourceParams )
+					};
 
-					var groupName = groupNames[ groupIndex ];
-					var groupValue = resourceConfiguration.matcher.group( javaCast( "int", groupIndex ) );
+					// Now, add on the resource params mapped in the 
+					// actual resource value. To make this easier, get 
+					// some short-hand reference to our compiled values.
+					var groupNames = resourceConfiguration.compiledResource.groupNames;
+					var groupCount = resourceConfiguration.compiledResource.groupCount;
 
-					resolution.resourceParams[ groupName ] = groupvalue;
+					// For each captured group, define one resource param.
+					// Based on our pattern, we know that all captrued 
+					// groups will be defined.
+					for ( var groupIndex = 1 ; groupIndex <= groupCount ; groupIndex++ ) {
+
+						var groupName = groupNames[ groupIndex ];
+						var groupValue = matcher.group( javaCast( "int", groupIndex ) );
+
+						resolution.resourceParams[ groupName ] = groupvalue;
+
+					}
+
+					return( resolution );
 
 				}
-
-				return( resolution );
 
 			}
 
@@ -217,14 +226,11 @@ component
 		// Compile the resource.
 		var compiledResource = this._compileResourcePattern ( resourceUri );
 
-		// Create a new resource configuration. We're going to tack 
-		// on a Matcher instance as well; this way, we can easily 
-		// reset the matcher later when doing searches.
+		// Create a new resource configuration.
 		var resourceConfiguration = {
 			httpMethod = httpMethod,
 			compiledResource = compiledResource,
-			resourceParams = resourceParams,
-			matcher = compiledResource.pattern.matcher( javaCast( "string", "" ) )
+			resourceParams = resourceParams
 		};
 
 		// Store the new configuration.
