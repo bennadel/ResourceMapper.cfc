@@ -26,9 +26,6 @@ component
 		// to allow users to provide an optional pattern to restrict the matching of the
 		// the pattern, ":id(\d+)".
 		// --
-		// :( [/(]+ )
-		// (?: ( \( [^)]+ \) ) )?
-		// --
 		// In this case, the first matched group is the param-name. The second matched 
 		// group is the optional pattern to be used.
 		uriComponentPattern = createObject( "java", "java.util.regex.Pattern" ).compile(
@@ -136,7 +133,7 @@ component
 		if ( cachingEnabled && structKeyExists( cachedResolutions, cacheKey ) ) {
 
 			var resolution = cachedResolutions[ cacheKey ];
-//writeOutput("cached");writeDump(resolution);abort;
+			
 			// Return hit.
 			if ( isStruct( resolution ) ) {
 
