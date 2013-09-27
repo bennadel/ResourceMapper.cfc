@@ -6,8 +6,8 @@ component
 	// I return an initialized object.
 	public any function init( 
 		string defaultParamName = "event",
-		boolean matchEntireResource = true
-		boolean cache
+		boolean matchEntireResource = true,
+		boolean cachingEnabled = true
 		) {
 
 		// Store the default param name - this is the name given to the param that gets
@@ -38,6 +38,14 @@ component
 		// If the user does not provide an explicit replacement pattern, we'll use the 
 		// following patternw which matches everything up until the next "/".
 		defaultParamPattern = "([^/]+)";
+
+		// Store cache setting.
+		variables.cachingEnabled = cachingEnabled;
+
+		// Every time a request is resolved, we have to loop over, at most, all the 
+		// resource configurations. But, if we canche the hits based on URLs, then we 
+		// only have to take that hit once.
+		cachedResolutions = {};
 
 		// Return this object reference.
 		return( this );
@@ -121,6 +129,26 @@ component
 		required string resourceUri
 		) {
 
+		// Define the cache key for the resolution caching.
+		var cacheKey = "#httpMethod#:#resourceUri#";
+
+		// Check to see if we have a cached response to return.
+		if ( cachingEnabled && structKeyExists( cachedResolutions, cacheKey ) ) {
+
+			var resolution = cachedResolutions[ cacheKey ];
+//writeOutput("cached");writeDump(resolution);abort;
+			// Return hit.
+			if ( isStruct( resolution ) ) {
+
+				return( resolution );
+
+			}
+
+			// Or, return miss.
+			return;
+
+		}
+
 		// Loop over the resource congifurations, looking for a match on both the HTTP
 		// method and the pattern. 
 		for ( var resourceConfiguration in resourceConfigurations ) {
@@ -162,6 +190,13 @@ component
 
 					}
 
+					// Cache response if caching is enabled.
+					if ( cachingEnabled ) {
+
+						cachedResolutions[ cacheKey ] = resolution;
+
+					}
+
 					return( resolution );
 
 				}
@@ -171,8 +206,8 @@ component
 		}
 
 		// If we made it this far, none of the compiled resources matched the incoming
-		// resource URI. Return NULL.
-		return;
+		// resource URI. If we are caching misses, let's track this url.
+		cachedResolutions[ cacheKey ] = false;
 
 	}
 

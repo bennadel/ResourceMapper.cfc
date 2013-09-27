@@ -261,4 +261,33 @@ component
 
 	}
 
+
+	function testCaching() {
+
+		// Create an instance of our resource mapper.
+		var mapper = new lib.ResourceMapper();
+
+		// Define a single resource to request multiple times.
+		mapper.get( "/blog/:blogID", "blog.view" );
+
+
+		// Test things that we know will work.
+
+		var resolution = mapper.resolveResource( "GET", "/blog/123" );
+
+		assert( ! structKeyExists( resolution, "isCached" ) );
+
+		// Since the resolutions are cached-by-reference, we can update the internal 
+		// cache value.
+		// --
+		// NOTE: This is definitely breaking encapsulation; but, I'm ok with that for now.
+		resolution.isCached = true;
+
+
+		var resolution = mapper.resolveResource( "GET", "/blog/123" );
+
+		assert( structKeyExists( resolution, "isCached" ) );
+
+	}
+
 }
