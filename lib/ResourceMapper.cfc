@@ -7,6 +7,7 @@ component
 	public any function init( 
 		string defaultParamName = "event",
 		boolean matchEntireResource = true
+		boolean cache
 		) {
 
 		// Store the default param name - this is the name given to the param that gets
@@ -54,7 +55,7 @@ component
 	// given the default param name.
 	public any function delete(
 		required string resourceUri, 
-		any resourceParams = structNew()
+		required any resourceParams
 		) {
 
 		buildResourceConfiguration( "DELETE", resourceUri, resourceParams );
@@ -69,8 +70,8 @@ component
 	// resourceParams can be null, string, or struct. If a string is passed-in, it is 
 	// given the default param name.
 	public any function get(
-		string resourceUri, 
-		any resourceParams = structNew()
+		required string resourceUri, 
+		required any resourceParams
 		) {
 
 		buildResourceConfiguration( "GET", resourceUri, resourceParams );
@@ -86,7 +87,7 @@ component
 	// given the default param name.
 	public any function post(
 		required string resourceUri, 
-		any resourceParams = structNew()
+		required any resourceParams
 		) {
 
 		buildResourceConfiguration( "POST", resourceUri, resourceParams );
@@ -102,7 +103,7 @@ component
 	// given the default param name.
 	public any function put(
 		required string resourceUri, 
-		any resourceParams = structNew()
+		required any resourceParams
 		) {
 
 		buildResourceConfiguration( "PUT", resourceUri, resourceParams );
@@ -116,8 +117,8 @@ component
 	// I resolve the given resource and HTTP action. If the given resource URI cannot
 	// be resolved, I return NULL.
 	public any function resolveResource(
-		string httpMethod = "GET",
-		string resourceUri
+		required string httpMethod,
+		required string resourceUri
 		) {
 
 		// Loop over the resource congifurations, looking for a match on both the HTTP
