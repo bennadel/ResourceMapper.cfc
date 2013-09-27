@@ -43,13 +43,46 @@ following Resource URI:
 
 When a resource is resolved, it is checked against the configured resources
 in the same order in which they have been defined. This means that first 
-resource definition has a higher precendence than the second resource 
-defintion. As such, the most specific resources should be defined first, 
+resource definition has a higher precedence than the second resource 
+definition. As such, the most specific resources should be defined first, 
 followed by the more general resource definitions.
 
 Under the hood, each Resource URI is compiled down into a Java Pattern and a
 Java Matcher object. This makes resolving the incoming resource (and extracting
 the named parameters) an extremely fast process.
 
+## Using Explicit Regular Expression Pattern Matching
+
+By default, the ResourceMapper.cfc will replace instances of the named-
+parameters with the regular expression pattern:
+
+([^/]+)
+
+This says, "match anything up until the next instance of '/'." If your 
+resources are more complicated than that, you can specify an explicit pattern
+to use when matching the URI component:
+
+/foo/:id(YOUR_PATTERN)
+
+After the :name portion, you can supply your own regular expression pattern 
+inside of a set of parenthesis. For obvious reasons, your pattern cannot, 
+itself, contain parenthesis or the ResourceMapper.cfc will not be able to 
+parse the URL.
+
+In the following example, I want to ensure that the :id parameter is numeric:
+
+/blog/:id(\d+)/comments
+
+Notice that I am supplying an explicit pattern, "\d+". 
+
+This feature provides the added benefit that you can now match partial URI 
+components since the explicit pattern breaks you out of the default "/" 
+component delimiter. For example, you can extract a numeric ID that is at
+the start of a URI component:
+
+/blog/:id(\d+)-my-blog-title.htm
+
+The ResourceMapper.cfc will extract the numeric :id even though it does not
+match the entire URI component.
 
 [1]: http://www.bennadel.com

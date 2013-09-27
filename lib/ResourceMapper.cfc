@@ -18,7 +18,25 @@ component
 		variables.matchEntireResource = matchEntireResource;
 
 		// Store the list of resource patterns that can be matched.
-		resourceConfigurations = []; 
+		resourceConfigurations = [];
+
+		// Define the RegularExpression pattern used to match the dynamic parameters in 
+		// the URI. By default, we'll look for a pattern like, ":id". However, we want
+		// to allow users to provide an optional pattern to restrict the matching of the
+		// the pattern, ":id(\d+)".
+		// --
+		// :( [/(]+ )
+		// (?: ( \( [^)]+ \) ) )?
+		// --
+		// In this case, the first matched group is the param-name. The second matched 
+		// group is the optional pattern to be used.
+		uriComponentPattern = createObject( "java", "java.util.regex.Pattern" ).compile(
+			javaCast( "string", ":([^/(]+)(?:(\([^)]+\)))?" )
+		);
+
+		// If the user does not provide an explicit replacement pattern, we'll use the 
+		// following patternw which matches everything up until the next "/".
+		defaultParamPattern = "([^/]+)";
 
 		// Return this object reference.
 		return( this );
@@ -238,36 +256,54 @@ component
 		// will be converted to a captruing group which we'll have to map via indicie.
 		var groupNames = [];
 
-		// Extract the resource components.
-		var resourceParams = reMatch( ":[^/]+", resourceUri );
+		// Get the matcher for the given URI.
+		var matcher = uriComponentPattern.matcher( javaCast( "string", resourceUri ) );
 
-		// Before we start replacing components with capturing groups, let's create our 
-		// base pattern. We'll start by making sure the resource maps to the beginning 
-		// of the string.
-		var resourcePattern = ( "^" & resourceUri );
+		// Create a string buffer to hold the resultant URI pattern as we start replacing
+		// named parameters with regular expression patterns.
+		var buffer = createObject( "java", "java.lang.StringBuffer" ).init();
 
-		// Check to see if we are matching the entire resource.
+		// Find all dynamic parameters in the resource definition.
+		while ( matcher.find() ) {
+
+			var paramName = matcher.group( javaCast( "int", 1 ) );
+			var paramPattern = matcher.group( javaCast( "int", 2 ) );
+
+			// If the user did not provide an explicit replacement pattern, then use the
+			// default replacement pattern which gets the entire uri component.
+			if ( isNull( paramPattern ) ) {
+
+				paramPattern = defaultParamPattern;
+
+			}
+
+			// Store the component name.
+			arrayAppend( groupNames, paramName );
+
+			// Replace with the regex pattern.
+			matcher.appendReplacement(
+				buffer,
+				matcher.quoteReplacement( javaCast( "string", paramPattern ) )
+			);
+
+		}
+
+		// Add any trailing part of the resource URI that has no dynamic elements.
+		matcher.appendTail( buffer );
+
+		// Make sure the resultant pattern will start matching at the start of the input.
+		var resourcePattern = ( "\A" & buffer.toString() );
+
+		// If the resource mapper is intended to match the entire string, the append the 
+		// end-of-string matcher.
 		if ( matchEntireResource ) {
 
-			// By appending the end-of-string character, we will prevent partial 
-			// resource matching.
-			resourcePattern &= "$";
+			resourcePattern &= "\Z";
 
 		}
 
-		// Now, let's replace each group.
-		for ( var resourceParam in resourceParams ) {
-
-			// Store the component name (everything after the ":").
-			arrayAppend( groupNames, listLast( resourceParam, ":" ) );
-
-			// Replace the component with a capturing group.
-			resourcePattern = replace( resourcePattern, resourceParam, "([^/]+)", "one" );
-
-		}
-
-		// Create our compiled resource. Each compiled resource has a Java Pattern 
-		// object and the collection of group names.
+		// Create our compiled resource. Each compiled resource has a Java Pattern object
+		// and the collection of group names.
 		var compiledResource = {
 			groupNames = groupNames,
 			groupCount = arrayLen( groupNames ),
